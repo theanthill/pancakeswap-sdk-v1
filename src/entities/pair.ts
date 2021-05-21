@@ -7,7 +7,8 @@ import { getCreate2Address } from '@ethersproject/address'
 
 import {
   BigintIsh,
-  FACTORY_ADDRESS,
+  FACTORY_ADDRESS_MAINNET,
+  FACTORY_ADDRESS_TESTNET,
   INIT_CODE_HASH,
   MINIMUM_LIQUIDITY,
   ZERO,
@@ -27,19 +28,35 @@ export class Pair {
   public readonly liquidityToken: Token
   private readonly tokenAmounts: [TokenAmount, TokenAmount]
 
-  public static getAddress(tokenA: Token, tokenB: Token): string {
+  public static getAddress(tokenA: Token, tokenB: Token, mainnet: boolean = true): string {
     const tokens = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA] // does safety checks
 
-    if (PAIR_ADDRESS_CACHE?.[tokens[0].address]?.[tokens[1].address] === undefined) {
-      PAIR_ADDRESS_CACHE = {
-        ...PAIR_ADDRESS_CACHE,
-        [tokens[0].address]: {
-          ...PAIR_ADDRESS_CACHE?.[tokens[0].address],
-          [tokens[1].address]: getCreate2Address(
-            FACTORY_ADDRESS,
-            keccak256(['bytes'], [pack(['address', 'address'], [tokens[0].address, tokens[1].address])]),
-            INIT_CODE_HASH
-          )
+    if (mainnet) {
+      if (PAIR_ADDRESS_CACHE?.[tokens[0].address]?.[tokens[1].address] === undefined) {
+        PAIR_ADDRESS_CACHE = {
+          ...PAIR_ADDRESS_CACHE,
+          [tokens[0].address]: {
+            ...PAIR_ADDRESS_CACHE?.[tokens[0].address],
+            [tokens[1].address]: getCreate2Address(
+              FACTORY_ADDRESS_MAINNET,
+              keccak256(['bytes'], [pack(['address', 'address'], [tokens[0].address, tokens[1].address])]),
+              INIT_CODE_HASH
+            )
+          }
+        }
+      }
+    } else {
+      if (PAIR_ADDRESS_CACHE?.[tokens[0].address]?.[tokens[1].address] === undefined) {
+        PAIR_ADDRESS_CACHE = {
+          ...PAIR_ADDRESS_CACHE,
+          [tokens[0].address]: {
+            ...PAIR_ADDRESS_CACHE?.[tokens[0].address],
+            [tokens[1].address]: getCreate2Address(
+              FACTORY_ADDRESS_TESTNET,
+              keccak256(['bytes'], [pack(['address', 'address'], [tokens[0].address, tokens[1].address])]),
+              INIT_CODE_HASH
+            )
+          }
         }
       }
     }
